@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <%- include('./partials/head.ejs') %>
+
+    <title>MovieDB</title>
+</head>
+<body>
+
+    <div class="site-top">
+    
+    <%- include('./partials/navbar.ejs') %>
+
+    <main class="person">
+        <div class="container">
+            <% if(user?.role == 0) { %> 
+                <div class="edit-btns">
+                    <a href="javascript:void(0)" onclick="deletePerson('<%= person.id %>')"><span class="material-icons">delete</span></a>
+                    <a href="/edit/person/<%= person.id %>"><span class="material-icons">edit</span></a>
+                </div>
+                <script>
+                    function deletePerson(id) {
+                        fetch('/delete/person/'+id, {
+                            method: 'DELETE'
+                        })
+                        .then((resp) => {
+                            if(resp.status == 200) window.location.href = '/';
+                            else alert("Server error");
+                        })
+                        .catch(err => alert("Server error"));
+                    }
+                </script>
+            <% } %>
+            <div class="person-details">
+                <div class="person-header">
+                    <h2><%= person.title %></h2>
+                    <div class="person-img">
+                        <img src="<%= person.img %>" alt="">
+                    </div>
+                </div>
+                <div class="person-info">
+                    <h4>Details</h4>
+                    <ul>
+                        <li>
+                            <span>Age:</span>
+                            <span><%= person.age %></span>
+                        </li>
+                        <li>
+                            <span>Name:</span>
+                            <span><%= person.name %></span>
+                        </li>
+                        <li>
+                            <span>Country:</span>
+                            <span><%= person.country %></span>
+                        </li>
+                        <li>
+                            <span>Gender:</span>
+                            <span><%= person.gender %></span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="person-about">
+                <div class="person-desc">
+                    <div class="row-header-left">
+                        <div></div>
+                        <h3>About</h3>
+                    </div>
+                    <p>
+                        <%= person.about %>
+                    </p>
+                </div>
+                <div class="person-roles">
+                    <div class="row-header-left">
+                        <div></div>
+                        <h3>Roles</h3>
+                    </div>
+                    <div class="roles-list">
+                        <% if(person.roles.length) { %>
+                            <% for(let role of person.roles) { %>
+                                <a class="roles-item" href="/details/<%= role.id %>">
+                                    <div class="role-img">
+                                        <img src="<%= role.img %>" alt="">
+                                    </div>
+                                    <div class="role-info">
+                                        <h4><%= role.title %></h4>
+                                        <h5><%= role.cast.find(c => c.actor == person.id)?.character %></h5>
+                                    </div>
+                                </a>
+                            <% } %>    
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    </div>
+
+    <%- include('./partials/footer.ejs') %>
+  
+</body>
+</html>

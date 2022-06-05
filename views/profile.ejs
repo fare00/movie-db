@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <%- include('./partials/head.ejs') %>
+
+    <title>MovieDB</title>
+</head>
+<body>
+
+    <div class="site-top">
+    
+    <%- include('./partials/navbar.ejs') %>
+
+    <main class="profile">
+        <div class="container">
+            <% if(user?.role == 0) { %> 
+                <div class="edit-btns">
+                    <a href="/add/details"><span class="material-icons">library_add</span></a>
+                    <a href="/add/person"><span class="material-icons">person_add</span></a>
+                </div>    
+            <% } %>
+            <div class="profile-header">
+                <h3><%= user.username %></h3>
+                <a href="/auth/logout">Log out</a>
+            </div>
+            <div class="row-header">
+                <div class="row-header-left">
+                    <div></div>
+                    <h3>Your Watchlist</h3>
+                </div>
+            </div>
+            <div class="watchlist-items">
+                <% user.watchlist.forEach(w => { %>
+                    <a class="item" href="/details/<%= w.id %>">
+                        <img src="<%= w.img %>" alt="">
+                        <h4><%= w.title %></h4>
+                    </a>
+                <% }) %>
+            </div>
+            <% if(!user.watchlist.length) { %>
+                <h2>Your watchlist is empty</h2>
+            <% } %>
+        </div>
+    </main>
+
+    </div>
+
+    <%- include('./partials/footer.ejs') %>
+  
+</body>
+</html>

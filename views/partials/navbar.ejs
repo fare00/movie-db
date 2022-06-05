@@ -1,0 +1,163 @@
+<nav>
+    <div class="container">
+        <a href="/"><h1>MovieDB</h1></a>
+        <div class="nav-items">
+            <div class="search-btn">search</div>
+            <form class="search-form hidden" method="get" action="/list">
+                <input type="text" autocomplete="off" placeholder="Search..." name="title">
+                <button class="search-icon">search</button>
+                <div class="search-results hidden"></div>
+            </form>
+           <!-- <ul class="menu-list hidden">
+                <a href="/list?types=Movie">
+                    <li>Movies</li>
+                </a>
+                <a href="/list?types=TV Series">
+                    <li>TV Series</li>
+                </a>
+                <a href="" class="profile-icon">
+                    <li><span class="material-icons">account_circle</span></li>
+                </a>
+                <% if(!user) { %>
+                    <a href="" class="open-login">
+                        <li>Log in</li>
+                    </a>
+                <% } else { %>
+                    <a href="/auth/logout" class="logout-btn">
+                        <li>Log out</li>
+                    </a>
+                <% } %>
+           </ul> -->
+           <div class="menu-list">
+                <div id="close-ml"><span class="material-icons">close</span></div>
+                <a href="/list?types=Movie">Movies</a>
+                <a href="/list?types=TV Series">TV Series</a>
+                <% if(user) { %> <div class="user-menu-btn"><span class="material-icons">account_circle</span></div> <% } %>
+                <div class="user-menu <% if(user) { %>logged<% } %>">
+                    <% if(!user) { %>
+                        <a href="" id="open-lm">Log in</a>
+                    <% } else { %>
+                        <h4><%= user.username %></h4>
+                        <div class="user-links">
+                            <a href="/profile">My Profile</a>
+                            <a href="/auth/logout">Log out</a>
+                        </div>
+                    <% } %>
+                </div>
+           </div>
+           <div class="menu-btn">menu</div>
+        </div>
+    </div>
+    <div class="login-modal hidden">
+        <div class="content">
+            <div class="header">
+                <h3>Sign In</h3>
+                <span class="material-icons">close</span>
+            </div>
+            <div class="login-options">
+                <a href="/auth/login">
+                    <i class="fab fa-google"></i>
+                    <span>Continue with Google</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<script>
+    window.addEventListener('load', () => {
+        const searchBtn = document.querySelector('.search-btn');
+        const menuBtn = document.querySelector('.menu-btn');
+        const searchForm = document.querySelector('.search-form');
+        const navMenu = document.querySelector('.menu-list');
+        const searchInput = searchForm.querySelector('input');
+        const searchResults = document.querySelector('.search-results');
+        const loginModal = document.querySelector('.login-modal');
+        const loginBtn = document.querySelector('#open-lm');
+        const closeLoginModal = document.querySelector('.login-modal .header span');
+        const closeMenuList = document.querySelector('#close-ml');
+        let searchList, searchAvailable = true;
+
+        if(loginBtn) {
+            loginBtn.addEventListener('click', e => {
+                e.preventDefault();
+                loginModal.classList.remove('hidden');
+            });
+            closeLoginModal.addEventListener('click', e => loginModal.classList.add('hidden'));
+            loginModal.addEventListener('click', e => {
+                if(e.target.className == 'login-modal') loginModal.classList.add('hidden');
+            });
+        }
+
+        window.addEventListener('resize', e => {
+            if(window.innerWidth > 900) navMenu.style.right = '0px';
+        });
+
+        searchBtn.addEventListener('click', e => {
+            navMenu.style.right = '-100%';
+            searchForm.classList.remove('hidden');
+            searchInput.focus();
+        });
+
+        searchInput.addEventListener('blur', e => {
+            if(e.relatedTarget?.className != 'search-icon' && e.relatedTarget?.firstElementChild.className != 'search-result') {
+                searchForm.classList.add('hidden');
+                searchResults.classList.add('hidden');
+                searchResults.innerHTML = '';
+            }
+        });
+
+        searchInput.addEventListener('input', e => {
+            if(searchInput.value && searchAvailable && searchList) {
+                searchResults.classList.remove('hidden');
+
+                const results = searchList.filter(item => item.title.toUpperCase().includes(searchInput.value.toUpperCase()));
+
+                searchResults.innerHTML = results.length ? '' : 'No results found';
+
+                results.slice(0, 4).forEach(result => {
+                    const a = document.createElement('a');
+                    a.href = `/details/${result._id}`;
+                    const div = document.createElement('div');
+                    div.className = 'search-result';
+                    a.append(div);
+                    const img = document.createElement('img');
+                    img.src = result.img;
+                    img.alt = 'Result Image';
+                    div.append(img);
+                    const riDiv = document.createElement('div');
+                    riDiv.className = 'result-info';
+                    div.append(riDiv);
+                    const h3 = document.createElement('h3');
+                    h3.innerText = result.title;
+                    riDiv.append(h3);
+
+                    searchResults.append(a);
+                });
+            } else {
+                searchResults.classList.add('hidden');
+                searchResults.innerHTML = '';
+            }
+        });
+
+        menuBtn.addEventListener('click', e => {
+            if(navMenu.style.right == '0px') {
+                navMenu.style.right = '-100%';
+            } else {
+                navMenu.style.right = '0px';
+                searchForm.classList.add('hidden');
+            }
+        });
+
+        closeMenuList.addEventListener('click', e => {
+            navMenu.style.right = '-100%';
+        });
+
+        fetch('/search-list')
+            .then(resp => resp.json())
+            .then(data => searchList = data)
+            .catch(err => {
+                searchAvailable = false;
+            });
+    });
+</script>

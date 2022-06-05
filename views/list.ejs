@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <%- include('./partials/head.ejs') %>
+
+    <title>MovieDB</title>
+</head>
+<body>
+    
+    <div class="site-top">
+
+    <%- include('./partials/navbar.ejs') %>
+
+    <main class="list">
+        <div class="container">
+            <div class="filter-siderbar">
+                <form method="get" action="/list">
+                    <div class="filter-box">
+                        <div class="filter-box-btn">
+                            <h4>Title</h4>
+                            <span class="material-icons">expand_more</span>
+                        </div>
+                        <div class="filter-box-content <%= filters.title ? '' : 'hidden' %>">
+                            <input type="text" name="title" class="filter-input" value="<%= filters.title %>">
+                        </div>
+                    </div>
+                    <div class="filter-box">
+                        <div class="filter-box-btn">
+                            <h4>Country</h4>
+                            <span class="material-icons">expand_more</span>
+                        </div>
+                        <div class="filter-box-content <%= filters.countries ? '' : 'hidden' %>">
+                            <div class="checkbox-group" data-name="countries">
+                                <% for(let country of existingFilters.countries) { %>
+                                    <div class="checkbox" data-value="<%= country.data %>" <%= filters.countries?.includes(country.data) ? 'data-checked' : '' %>><%= country.text %></div>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-box">
+                        <div class="filter-box-btn">
+                            <h4>Genres</h4>
+                            <span class="material-icons">expand_more</span>
+                        </div>
+                        <div class="filter-box-content <%= filters.genres ? '' : 'hidden' %>">
+                            <div class="checkbox-group" data-name="genres">
+                                <% for(let genre of existingFilters.genres) { %>
+                                    <div class="checkbox" data-value="<%= genre.data %>" <%= filters.genres?.includes(genre.data) ? 'data-checked' : '' %>><%= genre.text %></div>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-box">
+                        <div class="filter-box-btn">
+                            <h4>Type</h4>
+                            <span class="material-icons">expand_more</span>
+                        </div>
+                        <div class="filter-box-content <%= filters.types ? '' : 'hidden' %>">
+                            <div class="checkbox-group" data-name="types">
+                                <% for(let type of existingFilters.types) { %>
+                                    <div class="checkbox" data-value="<%= type.data %>" <%= filters.types?.includes(type.data) ? 'data-checked' : '' %>><%= type.text %></div>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-box">
+                        <div class="filter-box-btn">
+                            <h4>Status</h4>
+                            <span class="material-icons">expand_more</span>
+                        </div>
+                        <div class="filter-box-content <%= filters.status ? '' : 'hidden' %>">
+                            <div class="checkbox-group" data-name="status">
+                                <% for(let status of existingFilters.status) { %>
+                                    <div class="checkbox" data-value="<%= status.data %>" <%= filters.status?.includes(status.data) ? 'data-checked' : '' %>><%= status.text %></div>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-box">
+                        <div class="filter-box-btn">
+                            <h4>Year</h4>
+                            <span class="material-icons">expand_more</span>
+                        </div>
+                        <div class="filter-box-content filter-content-row <%= filters['year-from'] || filters['year-to'] ? '' : 'hidden' %>">
+                            <span class="checkbox-label">From</span>
+                            <input type="text" name="year-from" class="filter-input" value="<%= filters['year-from'] %>">
+                            <span class="checkbox-label">To</span>
+                            <input type="text" name="year-to" class="filter-input" value="<%= filters['year-to'] %>">
+                        </div>
+                    </div>
+                    <div class="filter-box">
+                        <div class="filter-box-btn">
+                            <h4>Sort</h4>
+                            <span class="material-icons">expand_more</span>
+                        </div>
+                        <div class="filter-box-content">
+                            <div class="dropdown collapsed" data-name="sort-type" data-cvalue="<%= filters['sort-type'] ?? 'Newest' %>">
+                                <ul>
+                                <% for(let sort of existingFilters.sort) { %>
+                                    <li data-value="<%= sort.data %>" <%= filters['sort-type'] == sort.data ? 'data-checked' : '' %>><%= sort.text %></li>
+                                <% } %>
+                                </ul>    
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-btns">
+                        <button id="filter-search">Search</button>
+                        <div id="filter-reset">Reset</div>
+                    </div>
+                </form>
+            </div>
+            <div class="filtered-list">
+                <div class="content">
+                    <% for(let result of results.slice(0, 20)) { %>
+                        <a href="/details/<%= result._id %>" class="filtered-item">
+                            <div>
+                                <img src="<%= result.img %>" alt="item image">
+                            </div>
+                            <h4><%= result.title %></h4>
+                        </a>
+                    <% } %>
+                </div>
+                <% if(results.length == 21) { %> <div id="show-more">Show More</div> <% } %>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        window.addEventListener('load', e => {
+            const queries = window.location.href.split('?').length == 2 ? `?${window.location.href.split('?')[1]}` : '';
+            const showMore = document.querySelector('#show-more');
+            const listContent = document.querySelector('.filtered-list .content');
+            let isMore = true, p = 1;
+
+            showMore?.addEventListener('click', async e => {
+                if(isMore) {
+                    const results = await (await fetch(`/list/more/${p++}${queries}`)).json();
+
+                    if(results.length < 21) {
+                        isMore = false;
+                        showMore.style.display = 'none';
+                    }
+
+                    results.slice(0, 20).forEach(result => {
+                        const a = document.createElement('a');
+                        a.href = '/details/'+result.id;
+                        a.className = 'filtered-item';
+                        const div = document.createElement('div');
+                        const img = document.createElement('img');
+                        img.src = result.img;
+                        img.alt = 'item image';
+                        const h4 = document.createElement('h4');
+                        h4.innerText = result.title;
+                        div.append(img);
+                        a.append(div);
+                        a.append(h4);
+                        listContent.append(a);
+                    });
+                }
+            });
+        });
+
+        const filterBoxBtns = document.querySelectorAll('.filter-box-btn');
+        const filterBoxContents = document.querySelectorAll('.filter-box-content');
+
+        filterBoxBtns.forEach((btn, i) => {
+            btn.lastElementChild.innerText = filterBoxContents[i].className.includes('hidden') ? 'expand_more' : 'expand_less';
+            btn.addEventListener('click', () => {
+                filterBoxContents[i].classList.toggle('hidden');
+                btn.lastElementChild.innerText = filterBoxContents[i].className.includes('hidden') ? 'expand_more' : 'expand_less';
+            })
+        });
+
+
+        const checkboxGroups = document.querySelectorAll('.checkbox-group');
+
+        checkboxGroups.forEach(chg => {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = chg.dataset.name;
+            chg.append(input);
+
+            const checkBoxes = chg.querySelectorAll('.checkbox');
+
+            checkBoxes.forEach(chbx => {
+                const bx = document.createElement('span');
+                bx.className = 'checkbox-box';
+                const check = document.createElement('i');
+                check.className = 'material-icons';
+                check.innerText = 'check';
+                bx.append(check);
+                const label = document.createElement('span');
+                label.className = 'checkbox-label';
+                label.innerText = chbx.innerText;
+                chbx.innerHTML = '';
+                chbx.append(...[bx, label]);
+
+                if(chbx.hasAttribute('data-checked')) {
+                    check.style.visibility = 'visible';
+                    input.value = [...input.value.split(','), chbx.dataset.value].filter(el => el != '');
+                }
+
+                chbx.addEventListener('click', e => {
+                    if(chbx.hasAttribute('data-checked')) {
+                        check.style.visibility = 'hidden';
+                        chbx.removeAttribute('data-checked', '');
+                        input.value = input.value.split(',').filter(val => val != chbx.dataset.value && val != '');
+                    } else {
+                        check.style.visibility = 'visible';
+                        chbx.setAttribute('data-checked', '');
+                        input.value = [...input.value.split(','), chbx.dataset.value].filter(el => el != '');
+                    }
+                });
+            });
+        });
+
+        
+        const resetFilter = document.querySelector('#filter-reset');
+        resetFilter.addEventListener('click', () => window.location.href = '/list');
+
+        const dropdowns = document.querySelectorAll('.dropdown');
+
+        dropdowns.forEach(dd => {
+            const ddItems = dd.querySelectorAll('li');
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = dd.dataset.name;
+            input.value = dd.dataset.cvalue;
+            dd.append(input);
+            const btn = document.createElement('div');
+            const span = document.createElement('span');
+            span.innerText = dd.querySelector('li[data-value="'+dd.dataset.cvalue+'"]')?.innerText;
+            btn.append(span);
+            const span2 = document.createElement('span');
+            span2.className = 'material-icons';
+            span2.innerText = dd.className.includes('collapsed') ? 'expand_more' : 'expand_less';
+            btn.append(span2);
+            dd.prepend(btn);
+
+            btn.addEventListener('click', e => {
+                dd.classList.toggle('collapsed');
+                btn.lastElementChild.innerText = btn.lastElementChild.innerText == 'expand_more' ? 'expand_less' : 'expand_more';
+            });
+
+            ddItems.forEach(item => {
+                item.addEventListener('click', e => {
+                    dd.dataset.cvalue = input.value = item.dataset.value;
+                    btn.firstElementChild.innerText = item.innerText;
+                });
+            });
+        });
+    </script>
+
+
+    </div>
+
+    <%- include('./partials/footer.ejs') %>
+  
+</body>
+</html>

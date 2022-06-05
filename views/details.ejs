@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <%- include('./partials/head.ejs') %>
+
+    <title>MovieDB</title>
+</head>
+<body>
+    
+    <%- include('./partials/navbar.ejs') %>
+
+    <main class="details">
+        <div class="container">
+            <% if(user?.role == 0) { %> 
+                <div class="edit-btns">
+                    <a href="javascript:void(0)" onclick="deleteEntry('<%= details.id %>')"><span class="material-icons">delete</span></a>
+                    <a href="/edit/details/<%= details.id %>"><span class="material-icons">edit</span></a>
+                </div>    
+            <% } %>
+            <div class="details-title">
+                <h1><%= details.title %></h1>
+                <div><%= details.type %></div>
+            </div>
+            <div class="details-header">
+                <div class="header-media">
+                    <img src="<%= details.img %>" alt="">
+                    <iframe src="<%= details.trailer %>" frameborder="0" allowfullscreen></iframe>
+                </div>
+                <div class="header-info">
+                    <div class="header-watchlist" onclick="handleWatchlist('<%= details.id %>', this)">
+                        <i class="material-icons"><%= user?.watchlist.includes(details.id) ? 'bookmark_remove' : 'bookmark_add' %></i>
+                        <span>Watchlist</span>
+                    </div>
+                    <div class="header-rate">
+                        <i class="material-icons">star_outline</i>
+                        <span class="text">Rate</span>
+                    </div>
+                    <div class="header-rating">
+                        <i class="material-icons">star</i>
+                        <span><%= details.rating.count ? details.rating.sum/details.rating.count : 0 %> / 5</span>
+                    </div>
+                    <div class="header-rank">
+                        <i class="material-icons">leaderboard</i>
+                        <span>#<%= popularityRank %></span>
+                    </div>
+                </div>
+                <% if(user) { %>
+                    <div class="details-overlay hidden">
+                        <div class="top"><span class="material-icons">close</span></div>
+                        <div class="rating">
+                            <span class="material-icons">star</span>
+                            <h3><%= details.title %></h3>
+                            <p>Rate this</p>
+                            <div class="rating-nums" data-id="<%= details.id %>">
+                                <% if(rated) { [1, 2, 3, 4, 5].forEach(num => { %>
+                                    <span class="<%= num == rated.rating ? 'selected' : '' %>"><%= num %></span>
+                                <% }); } else { %>
+                                    <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+            <div class="row-container">
+                <div class="row-header">
+                    <div class="row-header-left">
+                        <div></div>
+                        <h3>Details & Summary</h3>
+                    </div>
+                </div>
+                <div class="row-body details-info">
+                    <div class="info-container">
+                        <div class="info-table">
+                            <ul class="info-genres">
+                                <% for(let genre of details.genres) { %>
+                                    <li><a href="/list?genres=<%= genre %>"><%= genre %></a></li>
+                                <% } %>
+                            </ul>
+                            <ul class="info-details">
+                                <li>
+                                    <span>Status</span>
+                                    <a href="/list?status=<%= details.status %>"><%= details.status %></a>
+                                </li>
+                                <li>
+                                    <span>Type</span>
+                                    <a href="/list?type=<%= details.type %>"><%= details.type %></a>
+                                </li>
+                                <li>
+                                    <span>Runtime</span>
+                                    <span><%= details.duration < 60 ? details.duration+"m" : Math.floor(details.duration/60)+'h '+ (details.duration%60)+'m' %></span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="info-desc">
+                            <%= details.desc %>
+                        </div>
+                    </div>
+                    <div class="episodes-container">
+                        <div class="episodes-show">
+                            <h4>Episodes</h4>
+                            <span>expand_more</span>
+                        </div>
+                        <ul class="episodes-list" style="display: none;">
+                            <% for(let ep of details.episodes) { %>
+                            <li>
+                                <div class="episode-img">
+                                    <img src="<%= ep.img %>" alt="">
+                                </div>
+                                <div class="episode-info">
+                                    <div class="episode-title"><%= ep.title %></div>
+                                    <div class="episode-numbers">
+                                        <span class="ep-season">Season <%= ep.snum %></span>
+                                        <span class="ep-number">Episode <%= ep.enum %></span>
+                                    </div>
+                                </div>
+                            </li>
+                            <% } %>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="row-container">
+                <div class="row-header">
+                    <div class="row-header-left">
+                        <div></div>
+                        <h3>Cast</h3>
+                    </div>
+                </div>
+                <div class="row-body cast-list">
+                    <% for(let c of details.cast) { %>
+                    <a class="cast-item" href="/person/<%= c.actor.id %>">
+                        <div class="cast-img">
+                            <img src="<%= c.actor.img %>" alt="">
+                        </div>
+                        <div class="cast-info">
+                            <h4><%= c.actor.title %></h4>
+                            <h5><%= c.character %></h5>
+                        </div>
+                    </a>
+                    <% } %>
+                </div>
+                <div id="cast-sm" class="material-icons">expand_more</div>
+            </div>
+        </div>
+    </main>
+
+    <%- include('./partials/footer.ejs') %>
+
+    <script>
+        window.addEventListener('load', () => {
+            const castList = document.querySelector(".cast-list");
+            const castItem = document.querySelector('.cast-item');
+            const castItems = document.querySelectorAll('.cast-item');
+            const castListExpand = document.querySelector('#cast-sm');
+            const episodesShow = document.querySelector('.episodes-show');
+            const episodesList = document.querySelector('.episodes-list');
+            const openRate = document.querySelector('.header-rate');
+            const ratingOverlay = document.querySelector('.details-overlay');
+            const ratingNums = document.querySelectorAll('.rating-nums span');
+            const ratingInfo = document.querySelector('.header-rating span');
+            const closeRatingOv = document.querySelector('.details-overlay .top span');
+
+            openRate.addEventListener('click', e => {
+                if(JSON.parse('<%= user ? true : false %>')) ratingOverlay?.classList.remove('hidden');
+                else document.querySelector('.login-modal').classList.remove('hidden');
+            });
+
+            closeRatingOv?.addEventListener('click', e => ratingOverlay.classList.add('hidden'));
+
+            ratingNums?.forEach(rn => {
+                rn.addEventListener('click', e => {
+                    ratingNums.forEach(r => { 
+                        if(r.innerText != rn.innerText) r.classList.remove('selected');
+                    });
+                    rn.classList.toggle('selected');
+                    fetch('/user/rate/'+rn.parentElement.dataset.id, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            rate: Number(rn.innerText)
+                        })
+                    })
+                    .then(resp => resp.text())
+                    .then(rating => {
+                        ratingInfo.innerText = `${rating} / 5`;
+                    })
+                    .catch(err => console.log('Error!'));
+                });
+            });
+
+            castListExpand.addEventListener('click', e => {
+                if (castList.clientHeight == castItem.clientHeight) {
+                    castList.style.height = 'auto';
+                    castListExpand.innerText = 'expand_less';
+                }
+                else {
+                    castList.style.height = castItem.clientHeight + 'px';
+                    castListExpand.innerText = 'expand_more';
+                }
+            });
+
+            episodesShow.addEventListener('click', e => {
+                if(episodesList.style.display == 'none') {
+                    episodesList.style.display = 'flex';
+                    episodesShow.lastElementChild.innerText = 'expand_less';
+                }
+                else {
+                    episodesList.style.display = 'none';
+                    episodesShow.lastElementChild.innerText = 'expand_more';
+                }
+            });
+
+            castList.style.height = castItem.clientHeight + 'px';
+        });
+
+        function handleWatchlist(id, elem) {
+            if(JSON.parse('<%= user ? true : false %>')) {
+                fetch('/user/watchlist/'+id, {
+                    method: 'PUT'
+                })
+                .then(resp => {
+                    if(elem.children[0].innerText == 'bookmark_add') elem.children[0].innerText = 'bookmark_remove';
+                    else elem.children[0].innerText = 'bookmark_add';
+                })
+                .catch(err => console.log('Error!'));
+            }
+            else document.querySelector('.login-modal').classList.remove('hidden');
+        }
+
+        function deleteEntry(id) {
+            fetch('/delete/details/'+id, {
+                method: 'DELETE'
+            })
+            .then(() => {window.location.href = '/'})
+            .catch(err => console.log(err));
+        }
+    </script>
+  
+</body>
+</html>

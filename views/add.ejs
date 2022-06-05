@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <%- include('./partials/head.ejs') %>
+
+        <title>MovieDB</title>
+</head>
+
+<body>
+
+    <div class="site-top">
+
+        <%- include('./partials/navbar.ejs') %>
+
+            <main class="add">
+                <div class="container">
+                    <% if(locals.people) { %>
+                    <form action="/add/details" method="post">
+                        <div class="cell">
+                            <h4>Title</h4>
+                            <input type="text" name="title" class="filter-input">
+                        </div>
+                        <div class="cell">
+                            <h4>Year</h4>
+                            <input type="text" name="year" class="filter-input">
+                        </div>
+                        <div class="cell">
+                            <h4>Trailer</h4>
+                            <input type="text" name="trailer" class="filter-input">
+                        </div>
+                        <div class="cell">
+                            <h4>Image</h4>
+                            <input type="text" name="img" class="filter-input">
+                        </div>
+                        <div class="cell">
+                            <h4>Description</h4>
+                            <textarea type="text" name="desc" class="filter-input"></textarea>
+                        </div>
+                        <div class="cell">
+                            <h4>Duration</h4>
+                            <input type="text" name="duration" class="filter-input">
+                        </div>
+                        <div class="cell">
+                            <h4>Country</h4>
+                            <div class="checkbox-group" data-name="country">
+                                <% for(let country of existingFilters.countries) { %>
+                                    <div class="checkbox" data-value="<%= country.data %>">
+                                        <%= country.text %>
+                                    </div>
+                                    <% } %>
+                            </div>
+                        </div>
+                        <div class="cell">
+                            <h4>Genre</h4>
+                            <div class="checkbox-group" data-name="genres" data-multiple>
+                                <% for(let genre of existingFilters.genres) { %>
+                                    <div class="checkbox" data-value="<%= genre.data %>">
+                                        <%= genre.text %>
+                                    </div>
+                                    <% } %>
+                            </div>
+                        </div>
+                        <div class="cell">
+                            <h4>Type</h4>
+                            <div class="checkbox-group" data-name="type">
+                                <% for(let type of existingFilters.types) { %>
+                                    <div class="checkbox" data-value="<%= type.data %>">
+                                        <%= type.text %>
+                                    </div>
+                                    <% } %>
+                            </div>
+                        </div>
+                        <div class="cell">
+                            <h4>Status</h4>
+                            <div class="checkbox-group" data-name="status">
+                                <% for(let status of existingFilters.status) { %>
+                                    <div class="checkbox" data-value="<%= status.data %>">
+                                        <%= status.text %>
+                                    </div>
+                                    <% } %>
+                            </div>
+                        </div>
+                        <div class="cell">
+                            <h4>Cast</h4>
+                            <div class="new-pair">Add pair</div>
+                        </div>
+                        <div class="cell">
+                            <h4>Episodes</h4>
+                            <div class="new-set">Add set</div>
+                        </div>
+                        <input type="submit" value="Add Entry">
+                    </form>
+                    <% } else { %>
+                    <form action="/add/person" method="post">
+                        <div class="cell">
+                            <h4>Title</h4>
+                            <input type="text" name="title" class="filter-input">
+                        </div>
+                        <div class="cell">
+                            <h4>Name</h4>
+                            <input type="text" name="name" class="filter-input">
+                        </div>
+                        <div class="cell">
+                            <h4>Age</h4>
+                            <input type="text" name="age" class="filter-input">
+                        </div>
+                        <div class="cell">
+                            <h4>About</h4>
+                            <textarea type="text" name="about" class="filter-input"></textarea>
+                        </div>
+                        <div class="cell">
+                            <h4>Country</h4>
+                            <div class="checkbox-group" data-name="country">
+                                <% for(let country of existingFilters.countries) { %>
+                                    <div class="checkbox" data-value="<%= country.data %>">
+                                        <%= country.text %>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                        <div class="cell">
+                            <h4>Roles</h4>
+                            <div class="new-pair">Add pair</div>
+                        </div>
+                        <div class="cell">
+                            <h4>Gender</h4>
+                            <div class="checkbox-group" data-name="gender">
+                                <% for(let gender of existingFilters.genders) { %>
+                                    <div class="checkbox" data-value="<%= gender.data %>">
+                                        <%= gender.text %>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                        <div class="cell">
+                            <h4>Img</h4>
+                            <input type="text" name="img" class="filter-input">
+                        </div>
+                        <input type="submit" value="Add Person">
+                    </form>
+                    <% } %>
+                </div>
+            </main>
+
+    </div>
+
+    <%- include('./partials/footer.ejs') %>
+
+        <script>
+            window.addEventListener('load', e => {
+                const PAIRS = JSON.parse(`<%- JSON.stringify(locals.people ? people : entries) %>`);
+
+                const checkboxGroups = document.querySelectorAll('.checkbox-group');
+
+                checkboxGroups.forEach(chg => {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.name = chg.dataset.name;
+                    chg.append(input);
+
+                    const checkBoxes = chg.querySelectorAll('.checkbox');
+
+                    checkBoxes.forEach(chbx => {
+                        const bx = document.createElement('span');
+                        bx.className = 'checkbox-box';
+                        const check = document.createElement('i');
+                        check.className = 'material-icons';
+                        check.innerText = 'check';
+                        bx.append(check);
+                        const label = document.createElement('span');
+                        label.className = 'checkbox-label';
+                        label.innerText = chbx.innerText;
+                        chbx.innerHTML = '';
+                        chbx.append(...[bx, label]);
+
+                        if (chbx.hasAttribute('data-checked')) {
+                            check.style.visibility = 'visible';
+                            input.value = [...input.value.split(','), chbx.dataset.value].filter(el => el != '');
+                        }
+
+                        chbx.addEventListener('click', e => {
+                            if (chbx.hasAttribute('data-checked')) {
+                                check.style.visibility = 'hidden';
+                                chbx.removeAttribute('data-checked', '');
+                                input.value = input.value.split(',').filter(val => val != chbx.dataset.value && val != '');
+                            } else {
+                                if (chg.hasAttribute('data-multiple')) {
+                                    input.value = [...input.value.split(','), chbx.dataset.value].filter(el => el != '');
+                                } else {
+                                    input.value = chbx.dataset.value;
+                                    checkBoxes.forEach(c => {
+                                        c.firstElementChild.firstElementChild.style.visibility = 'hidden';
+                                        c.removeAttribute('data-checked');
+                                    });
+                                }
+                                check.style.visibility = 'visible';
+                                chbx.setAttribute('data-checked', '');
+                            }
+                        });
+                    });
+                });
+
+                const newPairBtns = document.querySelectorAll('.new-pair');
+                const newSetBtns = document.querySelectorAll('.new-set');
+
+                newPairBtns.forEach(npb => {
+                    npb.addEventListener('click', e => {
+                        const div = document.createElement('div');
+                        div.className = 'cast-pair';
+                        const dropdown = document.createElement('select');
+                        const span = document.createElement('span');
+                        span.className = 'material-icons delete';
+                        span.innerText = 'delete';
+                        PAIRS.forEach(pair => {
+                            const option = document.createElement('option');
+                            option.value = pair._id;
+                            option.innerText = pair.title;
+                            dropdown.append(option);
+                        });
+                        const inputChar = document.createElement('input');
+                        inputChar.type = 'text';
+                        inputChar.className = 'filter-input';
+                        inputChar.placeholder = 'Character Name';
+                        if(`<%- locals.people ? 'people' : 'entries' %>` == 'people') {
+                            dropdown.name = 'cast_id';
+                            inputChar.name = 'cast_char';
+                        } else {
+                            dropdown.name = 'role_id';
+                            inputChar.name = 'role_char';
+                            
+                        }
+                        div.append(dropdown, inputChar, span);
+                        npb.before(div);
+                        span.addEventListener('click', e => div.remove());
+                    });
+                });
+
+                newSetBtns.forEach(nsb => {
+                    nsb.addEventListener('click', e => {
+                        const div = document.createElement('div');
+                        div.className = 'episode-set';
+                        const left = document.createElement('div');
+                        left.className = 'left';
+                        const inputTitle = document.createElement('input');
+                        inputTitle.type = 'text';
+                        inputTitle.name = 'ep_title';
+                        inputTitle.className = 'filter-input';
+                        inputTitle.placeholder = 'Episode Title';
+                        const inputImg = document.createElement('input');
+                        inputImg.type = 'text';
+                        inputImg.name = 'ep_img';
+                        inputImg.className = 'filter-input';
+                        inputImg.placeholder = 'Episode Image';
+                        const inputSes = document.createElement('input');
+                        inputSes.type = 'text';
+                        inputSes.name = 'ep_ses';
+                        inputSes.className = 'filter-input';
+                        inputSes.placeholder = 'Episode Season';
+                        const inputNum = document.createElement('input');
+                        inputNum.type = 'text';
+                        inputNum.name = 'ep_num';
+                        inputNum.className = 'filter-input';
+                        inputNum.placeholder = 'Episode Number';
+                        const span = document.createElement('span');
+                        span.className = 'material-icons';
+                        span.innerText = 'delete';
+                        left.append(inputTitle, inputImg, inputSes, inputNum);
+                        div.append(left, span);
+                        nsb.before(div);
+                        span.addEventListener('click', e => div.remove());
+                    });
+                });
+            });
+        </script>
+
+</body>
+
+</html>

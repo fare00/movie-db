@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <%- include('./partials/head.ejs') %>
+
+    <title>MovieDB</title>
+</head>
+<body>
+    
+    <%- include('./partials/navbar.ejs') %>
+
+    <main class="home">
+        <div class="container">
+            <div class="table-container">
+                <div class="table-content">
+                    <% for(let entry of popularEntries) { %>
+                        <a href="/details/<%= entry.id %>" class="table-item">
+                            <img src="<%= entry.img %>" alt="">
+                            <div>
+                                <h3><%= entry.title %></h3>
+                                <p><%= entry.type %></p>
+                            </div>
+                        </a>
+                    <% } %>
+                </div>
+            </div>
+            <div class="row-container">
+                <div class="row-header">
+                    <div class="row-header-left">
+                        <div></div>
+                        <h3>Latest added</h3>
+                    </div>
+                    <a href="/list"><span class="material-icons">list</span> Show more</a>
+                </div>
+                <div class="row-body">
+                    <div class="row-prev-items"><span>keyboard_arrow_left</span></div>
+                    <ul class="row-content">
+                        <% for(let entry of latestEntries) { %>
+                            <li class="row-item">
+                                <div class="row-img">
+                                    <a href="/details/<%= entry.id %>">
+                                        <img src="<%= entry.img %>" alt="">
+                                        <div class="row-type"><%= entry.type %></div>
+                                    </a>
+                                </div>
+                                <div class="row-info">
+                                    <h4><a href="/details/<%= entry.id %>"><%= entry.title %></a></h4>
+                                    <div class="watchlist-btn" onclick="handleWatchlist('<%= entry.id %>', this)">
+                                        <span>add</span>
+                                        <span>Watchlist</span>
+                                    </div>
+                                    <div class="row-rating">
+                                        <div class="row-rated">
+                                            <span>star</span>
+                                            <span><%= entry.rating.count ? entry.rating.sum/entry.rating.count : 0 %></span>
+                                        </div>
+                                        <div class="row-rate">
+                                            <span>star_outline</span>
+                                            <span>Rate</span>
+                                        </div>
+                                        <div class="rating-overlay hidden">
+                                            <div class="top">
+                                                <span class="material-icons">close</span>
+                                            </div>
+                                            <div class="rate-nums" data-entryid="<%= entry.id %>">
+                                                <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+                                            </div>
+                                            <div class="bottom"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        <% } %>
+                    </ul>
+                    <div class="row-next-items"><span>keyboard_arrow_right</span></div>
+                </div>    
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const rowPrevItems = document.querySelector('.row-prev-items span');
+        const rowNextItems = document.querySelector('.row-next-items span');
+        const rowContent = document.querySelector('ul.row-content');
+        const notLogged = document.querySelectorAll('.not-logged');
+        const rowRates = document.querySelectorAll('.row-rate');
+        const rowRateOverlays = document.querySelectorAll('.rating-overlay');
+        const rowRateClose = document.querySelectorAll('.rating-overlay .top span');
+        const rowRateNums = document.querySelectorAll('.rating-overlay .rate-nums');
+        const userRatings = JSON.parse(`<%- user ? JSON.stringify(user.rated) : '[]' %>`);
+        const rowRatings = document.querySelectorAll('.row-rated span:last-child');
+
+        rowRates.forEach((rr, i) => {
+            rr.addEventListener('click', e => {
+                if(JSON.parse('<%= user ? true : false %>')) rowRateOverlays[i].classList.remove('hidden');
+                else document.querySelector('.login-modal').classList.remove('hidden');
+            });
+            rowRateClose[i]?.addEventListener('click', e => {
+                rowRateOverlays[i].classList.add('hidden');
+            });
+        });
+
+        rowRateNums?.forEach((rrn, i) => {
+            const rateNums = rrn.querySelectorAll('span');
+            const rated = userRatings.find(r => r.entry == rrn.dataset.entryid);
+
+            rateNums.forEach(rn => {
+                if(rated && rn.innerText == rated.rating) rn.classList.add('selected');
+                rn.addEventListener('click', e => {
+                    rateNums.forEach(r => { 
+                        if(r.innerText != rn.innerText) r.classList.remove('selected');
+                    });
+                    rn.classList.toggle('selected');
+                    fetch('/user/rate/'+rrn.dataset.entryid, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            rate: Number(rn.innerText)
+                        })
+                    })
+                    .then(resp => resp.text())
+                    .then(rating => {
+                        rowRatings[i].innerText = rating;
+                    })
+                    .catch(err => console.log('Error!'));
+                });
+            });
+        });
+
+        notLogged.forEach(nl => nl.addEventListener('click', e => document.querySelector('.login-modal').classList.remove('hidden')));
+
+        rowPrevItems.addEventListener('click', e => {
+            let counter = 0;
+            let interval = setInterval(() => {
+                if(counter < 500) {
+                    rowContent.scrollLeft -= 10;
+                    counter += 10;
+                } else clearInterval(interval);
+            }, 1);
+        });
+
+        rowNextItems.addEventListener('click', e => {
+            let counter = 0;
+            let interval = setInterval(() => {
+                if(counter < 500) {
+                    rowContent.scrollLeft += 10;
+                    counter += 10;
+                } else clearInterval(interval);
+            }, 1);
+        });
+
+        function handleWatchlist(id, elem) {
+            if(JSON.parse('<%= user ? true : false %>')) {
+                fetch('/user/watchlist/'+id, {
+                    method: 'PUT'
+                })
+                .then(resp => {
+                    if(elem.children[0].innerText == 'add') elem.children[0].innerText = 'remove';
+                    else elem.children[0].innerText = 'add';
+                })
+                .catch(err => console.log('Error!'));
+            }
+            else document.querySelector('.login-modal').classList.remove('hidden');
+        }
+    </script>
+
+    <%- include('./partials/footer.ejs') %>
+  
+</body>
+</html>

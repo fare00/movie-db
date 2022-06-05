@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <%- include('./partials/head.ejs') %>
+
+        <title>MovieDB</title>
+</head>
+
+<body>
+
+    <div class="site-top">
+
+        <%- include('./partials/navbar.ejs') %>
+
+            <main class="add">
+                <div class="container">
+                    <% if(locals.people) { %>
+                    <form action="/edit/details/<%= entry.id %>" method="post">
+                        <div class="cell">
+                            <h4>Title</h4>
+                            <input type="text" name="title" class="filter-input" value="<%= entry.title %>">
+                        </div>
+                        <div class="cell">
+                            <h4>Year</h4>
+                            <input type="text" name="year" class="filter-input" value="<%= entry.year %>">
+                        </div>
+                        <div class="cell">
+                            <h4>Trailer</h4>
+                            <input type="text" name="trailer" class="filter-input" value="<%= entry.trailer %>">
+                        </div>
+                        <div class="cell">
+                            <h4>Image</h4>
+                            <input type="text" name="img" class="filter-input" value="<%= entry.img %>">
+                        </div>
+                        <div class="cell">
+                            <h4>Description</h4>
+                            <textarea type="text" name="desc" class="filter-input" value="<%= entry.desc %>"><%= entry.desc %></textarea>
+                        </div>
+                        <div class="cell">
+                            <h4>Duration</h4>
+                            <input type="text" name="duration" class="filter-input" value="<%= entry.duration %>">
+                        </div>
+                        <div class="cell">
+                            <h4>Country</h4>
+                            <div class="checkbox-group" data-name="country">
+                                <% for(let country of existingFilters.countries) { %>
+                                    <div class="checkbox" data-value="<%= country.data %>" <%= entry.country == country.data ? 'data-checked' : '' %>>
+                                        <%= country.text %>
+                                    </div>
+                                    <% } %>
+                            </div>
+                        </div>
+                        <div class="cell">
+                            <h4>Genre</h4>
+                            <div class="checkbox-group" data-name="genres" data-multiple>
+                                <% for(let genre of existingFilters.genres) { %>
+                                    <div class="checkbox" data-value="<%= genre.data %>" <%= entry.genres.includes(genre.data) ? 'data-checked' : '' %>>
+                                        <%= genre.text %>
+                                    </div>
+                                    <% } %>
+                            </div>
+                        </div>
+                        <div class="cell">
+                            <h4>Type</h4>
+                            <div class="checkbox-group" data-name="type">
+                                <% for(let type of existingFilters.types) { %>
+                                    <div class="checkbox" data-value="<%= type.data %>" <%= entry.type == type.data ? 'data-checked' : '' %>>
+                                        <%= type.text %>
+                                    </div>
+                                    <% } %>
+                            </div>
+                        </div>
+                        <div class="cell">
+                            <h4>Status</h4>
+                            <div class="checkbox-group" data-name="status">
+                                <% for(let status of existingFilters.status) { %>
+                                    <div class="checkbox" data-value="<%= status.data %>" <%= entry.status == status.data ? 'data-checked' : '' %>>
+                                        <%= status.text %>
+                                    </div>
+                                    <% } %>
+                            </div>
+                        </div>
+                        <div class="cell">
+                            <h4>Cast</h4>
+                            <% entry.cast.forEach(cast => { %>
+                                <div class="cast-pair">
+                                    <select name="cast_id">
+                                        <% people.forEach(person => { %>
+                                            <option value="<%= person.id %>" <%= cast.actor == person.id ? 'selected' : '' %>><%= person.title %></option>
+                                        <% }) %>
+                                    </select>
+                                    <input type="text" name="cast_char" class="filter-input" placeholder="Character Name" value="<%= cast.character %>">
+                                    <span class="material-icons delete" onclick="deleteParent(this)">delete</span>
+                                </div>
+                            <% }) %>
+                            <div class="new-pair">Add pair</div>
+                        </div>
+                        <div class="cell">
+                            <h4>Episodes</h4>
+                            <% entry.episodes.forEach(ep => { %>
+                                <div class="episode-set">
+                                    <div class="left">
+                                        <input type="text" name="ep_title" class="filter-input" placeholder="Episode Title" value="<%= ep.title %>">
+                                        <input type="text" name="ep_img" class="filter-input" placeholder="Episode Image" value="<%= ep.img %>">
+                                        <input type="text" name="ep_ses" class="filter-input" placeholder="Episode Season" value="<%= ep.snum %>">
+                                        <input type="text" name="ep_num" class="filter-input" placeholder="Episode Number" value="<%= ep.enum %>">
+                                    </div>
+                                    <span class="material-icons" onclick="deleteParent(this)">delete</span>
+                                </div>
+                            <% }) %>
+                            <div class="new-set">Add set</div>
+                        </div>
+                        <input type="submit" value="Update Entry">
+                    </form>
+                    <% } else { %>
+                    <form action="/edit/person/<%= person.id %>" method="post">
+                        <div class="cell">
+                            <h4>Title</h4>
+                            <input type="text" name="title" class="filter-input" value="<%= person.title %>">
+                        </div>
+                        <div class="cell">
+                            <h4>Name</h4>
+                            <input type="text" name="name" class="filter-input" value="<%= person.name %>">
+                        </div>
+                        <div class="cell">
+                            <h4>Age</h4>
+                            <input type="text" name="age" class="filter-input" value="<%= person.age %>">
+                        </div>
+                        <div class="cell">
+                            <h4>About</h4>
+                            <textarea type="text" name="about" class="filter-input" value="<%= person.about %>"><%= person.about %></textarea>
+                        </div>
+                        <div class="cell">
+                            <h4>Country</h4>
+                            <div class="checkbox-group" data-name="country">
+                                <% for(let country of existingFilters.countries) { %>
+                                    <div class="checkbox" data-value="<%= country.data %>" <%= person.country == country.data ? 'data-checked' : '' %>>
+                                        <%= country.text %>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                        <div class="cell">
+                            <h4>Roles</h4>
+                            <% person.roles.forEach(role => { %>
+                                <div class="cast-pair">
+                                    <select name="role_id">
+                                        <% entries.forEach(ent => { %>
+                                            <option value="<%= ent.id %>" <%= ent.id == role.id ? 'selected' : '' %>><%= ent.title %></option>
+                                        <% }) %>
+                                    </select>
+                                    <input type="text" name="role_char" class="filter-input" placeholder="Character Name" value="<%= role.cast.find(c => c.actor == person.id)?.character %>">
+                                    <span class="material-icons delete" onclick="deleteParent(this)">delete</span>
+                                </div>
+                            <% }) %>
+                            <div class="new-pair">Add pair</div>
+                        </div>
+                        <div class="cell">
+                            <h4>Gender</h4>
+                            <div class="checkbox-group" data-name="gender">
+                                <% for(let gender of existingFilters.genders) { %>
+                                    <div class="checkbox" data-value="<%= gender.data %>" <%= person.gender == gender.data ? 'data-checked' : '' %>>
+                                        <%= gender.text %>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                        <div class="cell">
+                            <h4>Img</h4>
+                            <input type="text" name="img" class="filter-input" value="<%= person.img %>">
+                        </div>
+                        <input type="submit" value="Update Person">
+                    </form>
+                    <% } %>
+                </div>
+            </main>
+
+    </div>
+
+    <%- include('./partials/footer.ejs') %>
+
+        <script>
+            window.addEventListener('load', e => {
+                const PAIRS = JSON.parse(`<%- JSON.stringify(locals.people ? people : entries) %>`);
+
+                const checkboxGroups = document.querySelectorAll('.checkbox-group');
+
+                checkboxGroups.forEach(chg => {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.name = chg.dataset.name;
+                    chg.append(input);
+
+                    const checkBoxes = chg.querySelectorAll('.checkbox');
+
+                    checkBoxes.forEach(chbx => {
+                        const bx = document.createElement('span');
+                        bx.className = 'checkbox-box';
+                        const check = document.createElement('i');
+                        check.className = 'material-icons';
+                        check.innerText = 'check';
+                        bx.append(check);
+                        const label = document.createElement('span');
+                        label.className = 'checkbox-label';
+                        label.innerText = chbx.innerText;
+                        chbx.innerHTML = '';
+                        chbx.append(...[bx, label]);
+
+                        if (chbx.hasAttribute('data-checked')) {
+                            check.style.visibility = 'visible';
+                            input.value = [...input.value.split(','), chbx.dataset.value].filter(el => el != '');
+                        }
+
+                        chbx.addEventListener('click', e => {
+                            if (chbx.hasAttribute('data-checked')) {
+                                check.style.visibility = 'hidden';
+                                chbx.removeAttribute('data-checked', '');
+                                input.value = input.value.split(',').filter(val => val != chbx.dataset.value && val != '');
+                            } else {
+                                if (chg.hasAttribute('data-multiple')) {
+                                    input.value = [...input.value.split(','), chbx.dataset.value].filter(el => el != '');
+                                } else {
+                                    input.value = chbx.dataset.value;
+                                    checkBoxes.forEach(c => {
+                                        c.firstElementChild.firstElementChild.style.visibility = 'hidden';
+                                        c.removeAttribute('data-checked');
+                                    });
+                                }
+                                check.style.visibility = 'visible';
+                                chbx.setAttribute('data-checked', '');
+                            }
+                        });
+                    });
+                });
+
+                const newPairBtns = document.querySelectorAll('.new-pair');
+                const newSetBtns = document.querySelectorAll('.new-set');
+
+                newPairBtns.forEach(npb => {
+                    npb.addEventListener('click', e => {
+                        const div = document.createElement('div');
+                        div.className = 'cast-pair';
+                        const dropdown = document.createElement('select');
+                        const span = document.createElement('span');
+                        span.className = 'material-icons delete';
+                        span.innerText = 'delete';
+                        PAIRS.forEach(pair => {
+                            const option = document.createElement('option');
+                            option.value = pair._id;
+                            option.innerText = pair.title;
+                            dropdown.append(option);
+                        });
+                        const inputChar = document.createElement('input');
+                        inputChar.type = 'text';
+                        inputChar.className = 'filter-input';
+                        inputChar.placeholder = 'Character Name';
+                        if(`<%- locals.people ? 'people' : 'entries' %>` == 'people') {
+                            dropdown.name = 'cast_id';
+                            inputChar.name = 'cast_char';
+                        } else {
+                            dropdown.name = 'role_id';
+                            inputChar.name = 'role_char';
+                            
+                        }
+                        div.append(dropdown, inputChar, span);
+                        npb.before(div);
+                        span.addEventListener('click', e => div.remove());
+                    });
+                });
+
+                newSetBtns.forEach(nsb => {
+                    nsb.addEventListener('click', e => {
+                        const div = document.createElement('div');
+                        div.className = 'episode-set';
+                        const left = document.createElement('div');
+                        left.className = 'left';
+                        const inputTitle = document.createElement('input');
+                        inputTitle.type = 'text';
+                        inputTitle.name = 'ep_title';
+                        inputTitle.className = 'filter-input';
+                        inputTitle.placeholder = 'Episode Title';
+                        const inputImg = document.createElement('input');
+                        inputImg.type = 'text';
+                        inputImg.name = 'ep_img';
+                        inputImg.className = 'filter-input';
+                        inputImg.placeholder = 'Episode Image';
+                        const inputSes = document.createElement('input');
+                        inputSes.type = 'text';
+                        inputSes.name = 'ep_ses';
+                        inputSes.className = 'filter-input';
+                        inputSes.placeholder = 'Episode Season';
+                        const inputNum = document.createElement('input');
+                        inputNum.type = 'text';
+                        inputNum.name = 'ep_num';
+                        inputNum.className = 'filter-input';
+                        inputNum.placeholder = 'Episode Number';
+                        const span = document.createElement('span');
+                        span.className = 'material-icons';
+                        span.innerText = 'delete';
+                        left.append(inputTitle, inputImg, inputSes, inputNum);
+                        div.append(left, span);
+                        nsb.before(div);
+                        span.addEventListener('click', e => div.remove());
+                    });
+                });
+            });
+
+            function deleteParent(elem) {
+                elem.parentElement.remove();
+            }
+        </script>
+
+</body>
+
+</html>
